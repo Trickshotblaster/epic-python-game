@@ -31,7 +31,7 @@ is_jumping = False
 jump_count = 10
 
 # Set up physics variables
-gravity = 3
+gravity = 6
 vertical_velocity = 60
 move_speed = 20
 max_jumps = 2
@@ -85,7 +85,6 @@ class Player(pygame.sprite.Sprite):
     def update_char(self, left, right, jump):
         # Jumping logic
         if jump:
-            print("jump")
             if self.jump_count <= max_jumps:
                 self.vel_y = -self.jump_speed
                 self.jump_count += 1
@@ -102,25 +101,21 @@ class Player(pygame.sprite.Sprite):
         collision_v = self.check_collision(False)
         # ahh yes, python syntax
         if left:
-            print("left")
             self.vel_x = -move_speed
         elif right:
-            print("right")
             self.vel_x = move_speed
+        else:
+            self.vel_x = 0
         if collision_h:
-            print("collision h")
             self.vel_x = 0
         else:
             self.rect.x += self.vel_x
         if collision_v:
-            print("collision v")
             self.vel_y = 0
         else:
             self.rect.y += self.vel_y
 
         print(self.vel_x, self.vel_y, self.rect.x, self.rect.y)
-
-        self.vel_x = 0
 
 
 player = Player(200, 200)
@@ -128,8 +123,6 @@ player = Player(200, 200)
 while running:
     # Handle events
     is_jumping = False
-    move_left = False
-    move_right = False
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
@@ -146,6 +139,7 @@ while running:
                 move_left = False
             elif event.key == pygame.K_RIGHT:
                 move_right = False
+    print(move_left, move_right, is_jumping)
     player.update_char(move_left, move_right, is_jumping)
 
     # Render the screen
