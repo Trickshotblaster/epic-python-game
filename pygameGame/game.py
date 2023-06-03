@@ -1,3 +1,4 @@
+import math
 import pygame
 
 # Initialize Pygame
@@ -8,6 +9,7 @@ class Level():
     def __init__(self, image, collision):
         self.image = image
         self.collision = collision
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -26,26 +28,29 @@ class Player(pygame.sprite.Sprite):
     def check_collision(self, direction):
         # true: horizontal, false: vertical
         # Check for collisions with obstacles
+        map_width = downscaled_map.get_width()
+        map_height = downscaled_map.get_height()
+        scale_x = screen_width / map_width
+        scale_y = screen_height / map_height
         if direction:
-            sprite_rect = pygame.Rect(self.rect.x + self.vel_x, self.rect.y, sprite_width, sprite_height)
+            sprite_rect = pygame.Rect(math.ceil(self.rect.x + self.vel_x), self.rect.y, sprite_width, sprite_height)
             collision = sprite_rect.collidelistall(
                 [
-                    pygame.Rect(x, y, 1, 1)
-                    for x in range(screen_width)
-                    for y in range(screen_height)
+                    pygame.Rect(x * scale_x, y * scale_y, 1, 1)
+                    for x in range(math.ceil(screen_width / scale_x))
+                    for y in range(math.ceil(screen_height / scale_y))
                     if level.collision.get_at((x, y)) == (0, 0, 0)
                 ]
             )
-
             return collision
         else:
-            sprite_rect = pygame.Rect(self.rect.x, self.rect.y + self.vel_y, sprite_width, sprite_height)
+            sprite_rect = pygame.Rect(self.rect.x, math.ceil(self.rect.y + self.vel_y), sprite_width, sprite_height)
             collision = sprite_rect.collidelistall(
                 [
-                    pygame.Rect(x, y, 1, 1)
-                    for x in range(screen_width)
-                    for y in range(screen_height)
-                    if obstacle_map.get_at((x, y)) == (0, 0, 0)
+                    pygame.Rect(x * scale_x, y * scale_y, 1, 1)
+                    for x in range(math.ceil(screen_width / scale_x))
+                    for y in range(math.ceil(screen_height / scale_y))
+                    if level.collision.get_at((x, y)) == (0, 0, 0)
                 ]
             )
 
@@ -60,14 +65,7 @@ class Player(pygame.sprite.Sprite):
             elif self.vel_y == 0:
                 self.vel_y = -self.jump_speed
                 self.jump_count = 1
-        if self.vel_y < 0:
-            self.vel_y *= 0.88
-        else:
-            self.vel_y *= 1.01
-        self.vel_y += gravity
 
-        collision_h = self.check_collision(True)
-        collision_v = self.check_collision(False)
         # ahh yes, python syntax
         if left:
             self.vel_x = -move_speed
@@ -75,16 +73,23 @@ class Player(pygame.sprite.Sprite):
             self.vel_x = move_speed
         else:
             self.vel_x = 0
+
+        print(self.vel_x, self.vel_y, self.rect.x, self.rect.y)
+        collision_h = self.check_collision(True)
+        collision_v = self.check_collision(False)
         if collision_h:
+            print("h")
             self.vel_x = 0
         else:
             self.rect.x += self.vel_x
         if collision_v:
+            print("v")
             self.vel_y = 0
-        else:
-            self.rect.y += self.vel_y
 
-        print(self.vel_x, self.vel_y, self.rect.x, self.rect.y)
+        else:
+            print("good to go")
+            self.rect.y += self.vel_y
+            self.vel_y += gravity
 
 
 # Set up the display
@@ -97,10 +102,11 @@ sprite_image = pygame.image.load("character.png")
 sprite_image = pygame.transform.scale(sprite_image, (32, 32))
 obstacle_map = pygame.image.load("obstacle_map.png")
 map_img = pygame.image.load("map_img.png")
+
 # Get sprite and obstacle map dimensions
 sprite_width, sprite_height = sprite_image.get_size()
 obstacle_width, obstacle_height = obstacle_map.get_size()
-
+downscaled_map = pygame.transform.scale(pygame.image.load("obstacle_map.png"), (64, 48))
 # Scale the obstacle map to match the screen size
 obstacle_map = pygame.transform.scale(obstacle_map, (screen_width, screen_height))
 map_img = pygame.transform.scale(map_img, (screen_width, screen_height))
@@ -115,19 +121,20 @@ is_jumping = False
 jump_count = 10
 
 # Set up physics variables
-gravity = 6
-vertical_velocity = 60
-move_speed = 20
+gravity = 0.2
+vertical_velocity = 10
+move_speed = 3
 max_jumps = 2
 # Game loop
 running = True
 clock = pygame.time.Clock()
 player = Player(200, 200)
-level = Level(image=map_img, collision=obstacle_map)
-
+level = Level(image=map_img, collision=downscaled_map)
 
 while running:
+    pass
     # Handle events
+
     is_jumping = False
     for event in pygame.event.get():
 
@@ -145,7 +152,7 @@ while running:
                 move_left = False
             elif event.key == pygame.K_RIGHT:
                 move_right = False
-    print(move_left, move_right, is_jumping)
+
     player.update_char(move_left, move_right, is_jumping)
 
     # Render the screen
