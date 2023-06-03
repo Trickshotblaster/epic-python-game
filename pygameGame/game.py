@@ -9,8 +9,8 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Physics-based Game")
 
 # Load sprite image and obstacle map
-sprite_image = pygame.image.load("thecircle.jpg")
-sprite_image = pygame.transform.scale(sprite_image, (30, 30))
+sprite_image = pygame.image.load("character.png")
+sprite_image = pygame.transform.scale(sprite_image, (32, 32))
 obstacle_map = pygame.image.load("obstacle_map.png")
 
 # Get sprite and obstacle map dimensions
@@ -43,7 +43,7 @@ clock = pygame.time.Clock()
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.images = [pygame.image.load("thecircle.jpg")]
+        self.images = [pygame.image.load("character.png")]
         self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.rect.x = x
