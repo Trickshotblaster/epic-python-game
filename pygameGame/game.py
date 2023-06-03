@@ -31,8 +31,8 @@ is_jumping = False
 jump_count = 10
 
 # Set up physics variables
-gravity = 0.5
-vertical_velocity = 10
+gravity = 3
+vertical_velocity = 60
 move_speed = 20
 max_jumps = 2
 # Game loop
@@ -54,6 +54,34 @@ class Player(pygame.sprite.Sprite):
         self.vel_y = 0
         self.jump_speed = vertical_velocity
 
+    def check_collision(self, direction):
+        # true: horizontal, false: vertical
+        # Check for collisions with obstacles
+        if direction:
+            sprite_rect = pygame.Rect(self.rect.x + self.vel_x, self.rect.y, sprite_width, sprite_height)
+            collision = sprite_rect.collidelistall(
+                [
+                    pygame.Rect(x, y, 1, 1)
+                    for x in range(screen_width)
+                    for y in range(screen_height)
+                    if obstacle_map.get_at((x, y)) == (0, 0, 0)
+                ]
+            )
+
+            return collision
+        else:
+            sprite_rect = pygame.Rect(self.rect.x, self.rect.y + self.vel_y, sprite_width, sprite_height)
+            collision = sprite_rect.collidelistall(
+                [
+                    pygame.Rect(x, y, 1, 1)
+                    for x in range(screen_width)
+                    for y in range(screen_height)
+                    if obstacle_map.get_at((x, y)) == (0, 0, 0)
+                ]
+            )
+
+            return collision
+
     def update_char(self, left, right, jump):
         # Jumping logic
         if jump:
@@ -70,24 +98,8 @@ class Player(pygame.sprite.Sprite):
             self.vel_y *= 1.01
         self.vel_y += gravity
 
-
-        # Check for collisions with obstacles
-        sprite_rect = pygame.Rect(self.rect.x + self.vel_x, self.rect.y + self.vel_y, sprite_width, sprite_height)
-        collision = sprite_rect.collidelistall(
-            [
-                pygame.Rect(x, y, 1, 1)
-                for x in range(screen_width)
-                for y in range(screen_height)
-                if obstacle_map.get_at((x, y)) == (0, 0, 0)
-            ]
-        )
-
-        # Handle collisions
-        if collision:
-            # Handle collision with obstacles, some chatGPT magic sauce
-            self.rect.x, self.rect.y = sprite_rect.x, sprite_rect.y
-            self.vel_x = 0
-            self.vel_y = 0
+        collision_h = self.check_collision(True)
+        collision_v = self.check_collision(False)
         # ahh yes, python syntax
         if left:
             print("left")
@@ -95,13 +107,20 @@ class Player(pygame.sprite.Sprite):
         elif right:
             print("right")
             self.vel_x = move_speed
-
-        if not collision:
+        if collision_h:
+            print("collision h")
+            self.vel_x = 0
+        else:
             self.rect.x += self.vel_x
-            self.rect.y = self.vel_y
+        if collision_v:
+            print("collision v")
+            self.vel_y = 0
+        else:
+            self.rect.y += self.vel_y
+
+        print(self.vel_x, self.vel_y, self.rect.x, self.rect.y)
+
         self.vel_x = 0
-
-
 
 
 player = Player(200, 200)
@@ -109,10 +128,9 @@ player = Player(200, 200)
 while running:
     # Handle events
     is_jumping = False
-    move_left= False
+    move_left = False
     move_right = False
     for event in pygame.event.get():
-
 
         if event.type == pygame.QUIT:
             running = False
@@ -129,7 +147,6 @@ while running:
             elif event.key == pygame.K_RIGHT:
                 move_right = False
     player.update_char(move_left, move_right, is_jumping)
-
 
     # Render the screen
     screen.fill((255, 255, 255))
