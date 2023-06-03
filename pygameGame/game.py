@@ -22,7 +22,7 @@ obstacle_map = pygame.transform.scale(obstacle_map, (screen_width, screen_height
 
 # Set up initial sprite position
 sprite_x = screen_width // 2 - sprite_width // 2
-sprite_y = screen_height // 2 - sprite_height // 2
+sprite_y = screen_height // 2 - sprite_height // 2 + 20
 
 # Set up initial movement variables
 move_left = False
@@ -32,15 +32,88 @@ jump_count = 10
 
 # Set up physics variables
 gravity = 0.5
-vertical_velocity = 0
-
+vertical_velocity = 10
+move_speed = 20
+max_jumps = 2
 # Game loop
 running = True
 clock = pygame.time.Clock()
 
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.images = [pygame.image.load("thecircle.jpg")]
+        self.image = self.images[0]
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.jump_count = 0
+        self.frame = 0
+        self.vel_x = 0
+        self.vel_y = 0
+        self.jump_speed = vertical_velocity
+
+    def update_char(self, left, right, jump):
+        # Jumping logic
+        if jump:
+            print("jump")
+            if self.jump_count <= max_jumps:
+                self.vel_y = -self.jump_speed
+                self.jump_count += 1
+            elif self.vel_y == 0:
+                self.vel_y = -self.jump_speed
+                self.jump_count = 1
+        if self.vel_y < 0:
+            self.vel_y *= 0.88
+        else:
+            self.vel_y *= 1.01
+        self.vel_y += gravity
+
+
+        # Check for collisions with obstacles
+        sprite_rect = pygame.Rect(self.rect.x + self.vel_x, self.rect.y + self.vel_y, sprite_width, sprite_height)
+        collision = sprite_rect.collidelistall(
+            [
+                pygame.Rect(x, y, 1, 1)
+                for x in range(screen_width)
+                for y in range(screen_height)
+                if obstacle_map.get_at((x, y)) == (0, 0, 0)
+            ]
+        )
+
+        # Handle collisions
+        if collision:
+            # Handle collision with obstacles, some chatGPT magic sauce
+            self.rect.x, self.rect.y = sprite_rect.x, sprite_rect.y
+            self.vel_x = 0
+            self.vel_y = 0
+        # ahh yes, python syntax
+        if left:
+            print("left")
+            self.vel_x = -move_speed
+        elif right:
+            print("right")
+            self.vel_x = move_speed
+
+        if not collision:
+            self.rect.x += self.vel_x
+            self.rect.y = self.vel_y
+        self.vel_x = 0
+
+
+
+
+player = Player(200, 200)
+
 while running:
     # Handle events
+    is_jumping = False
+    move_left= False
+    move_right = False
     for event in pygame.event.get():
+
+
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
@@ -55,55 +128,15 @@ while running:
                 move_left = False
             elif event.key == pygame.K_RIGHT:
                 move_right = False
+    player.update_char(move_left, move_right, is_jumping)
 
-    # Apply gravity
-    vertical_velocity += gravity
-
-    # Update sprite position based on movement
-    if move_left:
-        sprite_x -= 5
-    elif move_right:
-        sprite_x += 5
-
-    # Jumping logic
-    if is_jumping:
-        if jump_count >= -10:
-            neg = 1
-            if jump_count < 0:
-                neg = -1
-            sprite_y -= (jump_count ** 2) * 0.5 * neg
-            jump_count -= 1
-        else:
-            is_jumping = False
-            jump_count = 10
-
-    # Check for collisions with obstacles
-    sprite_rect = pygame.Rect(sprite_x, sprite_y, sprite_width, sprite_height)
-    collision = sprite_rect.collidelistall(
-        [
-            pygame.Rect(x, y, 1, 1)
-            for x in range(screen_width)
-            for y in range(screen_height)
-            if obstacle_map.get_at((x, y)) == (0, 0, 0)
-        ]
-    )
-
-    # Handle collisions
-    if collision:
-        # Handle collision with obstacles
-        sprite_x, sprite_y = sprite_rect.x, sprite_rect.y
-        vertical_velocity = 0
-
-    # Update sprite position vertically
-    sprite_y += vertical_velocity
 
     # Render the screen
     screen.fill((255, 255, 255))
     screen.blit(obstacle_map, (0, 0))
-    screen.blit(sprite_image, (sprite_x, sprite_y))
+    screen.blit(sprite_image, (player.rect.x, player.rect.y))
 
     pygame.display.flip()
-    clock.tick(60)
 
 # Quit the game
 pygame.quit()
