@@ -16,7 +16,13 @@ class Level():
         for x in range(self.powerup_map.get_width()):
             for y in range(self.powerup_map.get_height()):
                 if self.powerup_map.get_at((x, y)) == (255, 255, 0):
-                    self.powerups.append(Powerup(["coin.png"], "coin", x, y))
+                    is_colliding = False
+                    for powerup in self.powerups:
+                        if (abs(powerup.rect.x - x)) <= player.image.get_width() / 2 and (
+                    abs(powerup.rect.y - y)) <= powerup.image.get_height() / 2:
+                            is_colliding = True
+                    if not is_colliding:
+                        self.powerups.append(Powerup(["coin.png"], "coin", x, y))
 
 
 class Powerup(pygame.sprite.Sprite):
@@ -49,6 +55,7 @@ class Enemy(pygame.sprite.Sprite):
         self.frame = 0
         self.vel_x = 0
         self.vel_y = 0
+        self.type = "enemy"
 
     def find_path(self, point_x, point_y):
         self.vel_x = (point_x - self.rect.x) * 0.025
@@ -107,6 +114,7 @@ class Player(pygame.sprite.Sprite):
         self.vel_x = 0
         self.vel_y = 0
         self.jump_speed = vertical_velocity
+        self.coins = 0
 
     def check_collision(self, direction):
         # true: horizontal, false: vertical
@@ -139,8 +147,27 @@ class Player(pygame.sprite.Sprite):
 
             return collision
 
-    def update_char(self, left, right, jump):
+    def get_colliding_powerups_and_enemies(self):
+        collisions = []
+        for enemy in level.enemies:
+            if (abs(enemy.rect.x - player.rect.x)) <= player.image.get_width() / 2 and (
+                    abs(enemy.rect.y - player.rect.y)) <= player.image.get_height() / 2:
+                collisions.append(enemy)
+        for powerup in level.powerups:
+            if (abs(powerup.rect.x - player.rect.x)) <= powerup.image.get_width() / 2 and (
+                    abs(powerup.rect.y - player.rect.y)) <= player.image.get_height() / 2:
+                collisions.append(powerup)
+        return collisions
 
+    def update_char(self, left, right, jump):
+        has_collected = False
+        for collision in self.get_colliding_powerups_and_enemies():
+            if collision.type == "coin":
+                print(has_collected)
+                level.powerups.remove(collision)
+                if not has_collected:
+                    self.coins += 1
+                    has_collected = True
         # Jumping logic
         if jump:
             if self.jump_count <= max_jumps:
@@ -244,6 +271,9 @@ while running:
     for powerup in level.powerups:
         powerup.update()
         screen.blit(powerup.image, (powerup.rect.x, powerup.rect.y))
+    coins_font = pygame.font.SysFont("system-ui", 24)
+    cons_surface = coins_font.render("Coins: " + str(player.coins), False, (0, 0, 0))
+    screen.blit(cons_surface, (10, 10))
     pygame.display.flip()
     is_jumping = False
 # Quit the game
