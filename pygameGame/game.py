@@ -19,7 +19,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.jump_count = 0
+        self.jump_count = 1
         self.frame = 0
         self.vel_x = 0
         self.vel_y = 0
@@ -62,10 +62,9 @@ class Player(pygame.sprite.Sprite):
             if self.jump_count <= max_jumps:
                 self.vel_y = -self.jump_speed
                 self.jump_count += 1
-            elif self.vel_y == 0:
+            elif self.check_collision(False):
                 self.vel_y = -self.jump_speed
                 self.jump_count = 1
-
         # ahh yes, python syntax
         if left:
             self.vel_x = -move_speed
@@ -74,20 +73,16 @@ class Player(pygame.sprite.Sprite):
         else:
             self.vel_x = 0
 
-        print(self.vel_x, self.vel_y, self.rect.x, self.rect.y)
         collision_h = self.check_collision(True)
         collision_v = self.check_collision(False)
         if collision_h:
-            print("h")
             self.vel_x = 0
         else:
             self.rect.x += self.vel_x
         if collision_v:
-            print("v")
             self.vel_y = 0
-
+            self.jump_count = 1
         else:
-            print("good to go")
             self.rect.y += self.vel_y
             self.vel_y += gravity
 
@@ -118,11 +113,10 @@ sprite_y = screen_height // 2 - sprite_height // 2 + 20
 move_left = False
 move_right = False
 is_jumping = False
-jump_count = 10
 
 # Set up physics variables
 gravity = 0.2
-vertical_velocity = 10
+vertical_velocity = 7.5
 move_speed = 3
 max_jumps = 2
 # Game loop
@@ -135,7 +129,6 @@ while running:
     pass
     # Handle events
 
-    is_jumping = False
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
@@ -145,7 +138,7 @@ while running:
                 move_left = True
             elif event.key == pygame.K_RIGHT:
                 move_right = True
-            elif event.key == pygame.K_SPACE and not is_jumping:
+            elif event.key == pygame.K_SPACE:
                 is_jumping = True
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
@@ -161,6 +154,6 @@ while running:
     screen.blit(sprite_image, (player.rect.x, player.rect.y))
 
     pygame.display.flip()
-
+    is_jumping = False
 # Quit the game
 pygame.quit()
