@@ -6,10 +6,36 @@ pygame.init()
 
 
 class Level():
-    def __init__(self, image, collision, enemy_list):
+    def __init__(self, image, collision, enemy_list, powerup_map):
         self.image = image
         self.collision = collision
         self.enemies = [Enemy(x[0], x[1], x[2]) for x in enemy_list]  # [[x, y, imgs]]
+        self.powerup_map = powerup_map
+        self.powerups = []
+        # yellow = coin, more coming soon
+        for x in range(self.powerup_map.get_width()):
+            for y in range(self.powerup_map.get_height()):
+                if self.powerup_map.get_at((x, y)) == (255, 255, 0):
+                    self.powerups.append(Powerup(["coin.png"], "coin", x, y))
+
+
+class Powerup(pygame.sprite.Sprite):
+    def __init__(self, images, type, pos_x, pos_y):
+        super().__init__()
+        self.images = [pygame.image.load(image) for image in images]
+        self.image = self.images[0]
+        self.rect = self.image.get_rect()
+        self.rect.x = pos_x
+        self.rect.y = pos_y
+        self.frame = 0
+        self.type = type
+
+    def update(self):
+        self.image = self.images[self.frame]
+        if self.frame < len(self.images) - 1:
+            self.frame += 1
+        else:
+            self.frame = 0
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -25,11 +51,11 @@ class Enemy(pygame.sprite.Sprite):
         self.vel_y = 0
 
     def find_path(self, point_x, point_y):
-        self.vel_x = (point_x - self.rect.x) * 0.01
-        self.vel_y = (point_y - self.rect.y) * 0.01
+        self.vel_x = (point_x - self.rect.x) * 0.025
+        self.vel_y = (point_y - self.rect.y) * 0.025
 
     def update(self):
-        self.find_path(player.rect.x, player.rect.y)
+        self.find_path((player.rect.x + player.image.get_width() / 2), (player.rect.y + player.image.get_height() / 2))
         self.image = self.images[self.frame]
         if not self.check_collision(True):
             self.rect.x += self.vel_x
@@ -164,6 +190,7 @@ downscaled_map = pygame.transform.scale(pygame.image.load("obstacle_map.png"), (
 # Scale the obstacle map to match the screen size
 obstacle_map = pygame.transform.scale(obstacle_map, (screen_width, screen_height))
 map_img = pygame.transform.scale(map_img, (screen_width, screen_height))
+powerup_map = pygame.transform.scale(pygame.image.load("powerup_map.png"), (screen_width, screen_height))
 # Set up initial sprite position
 sprite_x = screen_width // 2 - sprite_width // 2
 sprite_y = screen_height // 2 - sprite_height // 2 + 20
@@ -182,7 +209,7 @@ max_jumps = 2
 running = True
 player = Player(sprite_x, sprite_y)
 enemies = [[200, 200, ["enemy.png"]], [250, 250, ["enemy.png"]]]
-level = Level(image=map_img, collision=downscaled_map, enemy_list=enemies)
+level = Level(image=map_img, collision=downscaled_map, enemy_list=enemies, powerup_map=powerup_map)
 
 while running:
     pass
@@ -214,6 +241,9 @@ while running:
     for enemy in level.enemies:
         enemy.update()
         screen.blit(enemy.image, (enemy.rect.x, enemy.rect.y))
+    for powerup in level.powerups:
+        powerup.update()
+        screen.blit(powerup.image, (powerup.rect.x, powerup.rect.y))
     pygame.display.flip()
     is_jumping = False
 # Quit the game
