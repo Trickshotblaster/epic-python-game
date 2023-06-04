@@ -90,7 +90,7 @@ class Player(pygame.sprite.Sprite):
 # Set up the display
 screen_width, screen_height = 640, 480
 screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Physics-based Game")
+pygame.display.set_caption("Epic Python Game")
 
 # Load sprite image and obstacle map
 sprite_image = pygame.image.load("character.png")
@@ -134,16 +134,16 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                 move_left = True
-            elif event.key == pygame.K_RIGHT:
+            elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                 move_right = True
-            elif event.key == pygame.K_SPACE:
+            elif event.key == pygame.K_SPACE or event.key == pygame.K_w or event.key == pygame.K_UP:
                 is_jumping = True
         elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                 move_left = False
-            elif event.key == pygame.K_RIGHT:
+            elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                 move_right = False
 
     player.update_char(move_left, move_right, is_jumping)
