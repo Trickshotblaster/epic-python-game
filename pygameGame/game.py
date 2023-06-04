@@ -6,9 +6,66 @@ pygame.init()
 
 
 class Level():
-    def __init__(self, image, collision):
+    def __init__(self, image, collision, enemy_list):
         self.image = image
         self.collision = collision
+        self.enemies = [Enemy(x[0], x[1], x[2]) for x in enemy_list]  # [[x, y, imgs]]
+
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, images):
+        super().__init__()
+        self.images = [pygame.image.load(image) for image in images]
+        self.image = self.images[0]
+        self.rect = self.image.get_rect()
+        self.rect.x = pos_x
+        self.rect.y = pos_y
+        self.frame = 0
+        self.vel_x = 0
+        self.vel_y = 0
+
+    def find_path(self, point_x, point_y):
+        self.vel_x = (point_x - self.rect.x) * 0.01
+        self.vel_y = (point_y - self.rect.y) * 0.01
+
+    def update(self):
+        self.find_path(player.rect.x, player.rect.y)
+        self.image = self.images[self.frame]
+        if not self.check_collision(True):
+            self.rect.x += self.vel_x
+        if not self.check_collision(False):
+            self.rect.y += self.vel_y
+
+    def check_collision(self, direction):
+        # true: horizontal, false: vertical
+        # Check for collisions with obstacles
+        map_width = level.collision.get_width()
+        map_height = level.collision.get_height()
+        scale_x = screen_width / map_width
+        scale_y = screen_height / map_height
+        if direction:
+            sprite_rect = pygame.Rect(math.ceil(self.rect.x + self.vel_x), self.rect.y, sprite_width, sprite_height)
+            collision = sprite_rect.collidelistall(
+                [
+                    pygame.Rect(x * scale_x, y * scale_y, 1, 1)
+                    for x in range(math.ceil(screen_width / scale_x))
+                    for y in range(math.ceil(screen_height / scale_y))
+                    if level.collision.get_at((x, y)) == (0, 0, 0)
+                ]
+            )
+            return collision
+        else:
+            sprite_rect = pygame.Rect(self.rect.x, math.ceil(self.rect.y + self.vel_y), sprite_width, sprite_height)
+            collision = sprite_rect.collidelistall(
+                [
+                    pygame.Rect(x * scale_x, y * scale_y, 1, 1)
+                    for x in range(math.ceil(screen_width / scale_x))
+                    for y in range(math.ceil(screen_height / scale_y))
+                    if level.collision.get_at((x, y)) == (0, 0, 0)
+                ]
+            )
+
+            return collision
 
 
 class Player(pygame.sprite.Sprite):
@@ -28,8 +85,8 @@ class Player(pygame.sprite.Sprite):
     def check_collision(self, direction):
         # true: horizontal, false: vertical
         # Check for collisions with obstacles
-        map_width = downscaled_map.get_width()
-        map_height = downscaled_map.get_height()
+        map_width = level.collision.get_width()
+        map_height = level.collision.get_height()
         scale_x = screen_width / map_width
         scale_y = screen_height / map_height
         if direction:
@@ -57,6 +114,7 @@ class Player(pygame.sprite.Sprite):
             return collision
 
     def update_char(self, left, right, jump):
+
         # Jumping logic
         if jump:
             if self.jump_count <= max_jumps:
@@ -85,6 +143,7 @@ class Player(pygame.sprite.Sprite):
         else:
             self.rect.y += self.vel_y
             self.vel_y += gravity
+        self.image = self.images[self.frame]
 
 
 # Set up the display
@@ -101,7 +160,7 @@ map_img = pygame.image.load("map_img.png")
 # Get sprite and obstacle map dimensions
 sprite_width, sprite_height = sprite_image.get_size()
 obstacle_width, obstacle_height = obstacle_map.get_size()
-downscaled_map = pygame.transform.scale(pygame.image.load("obstacle_map.png"), (64, 48))
+downscaled_map = pygame.transform.scale(pygame.image.load("obstacle_map.png"), (32, 24))
 # Scale the obstacle map to match the screen size
 obstacle_map = pygame.transform.scale(obstacle_map, (screen_width, screen_height))
 map_img = pygame.transform.scale(map_img, (screen_width, screen_height))
@@ -121,9 +180,9 @@ move_speed = 3
 max_jumps = 2
 # Game loop
 running = True
-clock = pygame.time.Clock()
-player = Player(200, 200)
-level = Level(image=map_img, collision=downscaled_map)
+player = Player(sprite_x, sprite_y)
+enemies = [[200, 200, ["enemy.png"]], [250, 250, ["enemy.png"]]]
+level = Level(image=map_img, collision=downscaled_map, enemy_list=enemies)
 
 while running:
     pass
@@ -151,8 +210,10 @@ while running:
     # Render the screen
     screen.fill((255, 255, 255))
     screen.blit(level.image, (0, 0))
-    screen.blit(sprite_image, (player.rect.x, player.rect.y))
-
+    screen.blit(player.image, (player.rect.x, player.rect.y))
+    for enemy in level.enemies:
+        enemy.update()
+        screen.blit(enemy.image, (enemy.rect.x, enemy.rect.y))
     pygame.display.flip()
     is_jumping = False
 # Quit the game
