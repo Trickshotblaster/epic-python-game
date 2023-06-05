@@ -1,6 +1,8 @@
 # epic-python-game
 Epic game made in python with pygame
-
+<h2>
+<a href="https://trickshotblaster.itch.io/epic-python-game">Download on itch.io!</a>
+</h2>
 ![character](https://github.com/Trickshotblaster/epic-python-game/assets/107130695/335eddf1-ad8c-438a-bccc-7ec5f642c9fa)
 
 
