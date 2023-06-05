@@ -173,7 +173,6 @@ class Player(pygame.sprite.Sprite):
         has_collected = False
         for collision in self.get_colliding_powerups_and_enemies():
             if collision.type == "coin":
-                print(has_collected)
                 level.powerups.remove(collision)
                 if not has_collected:
                     self.coins += 1
