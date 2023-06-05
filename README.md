@@ -1,10 +1,10 @@
-# epic-python-game
+# epic-python-game ![character](https://github.com/Trickshotblaster/epic-python-game/assets/107130695/335eddf1-ad8c-438a-bccc-7ec5f642c9fa)
 Epic game made in python with pygame
 <h2>
 <a href="https://trickshotblaster.itch.io/epic-python-game">Download on itch.io!</a>
 </h2>
 
-![character](https://github.com/Trickshotblaster/epic-python-game/assets/107130695/335eddf1-ad8c-438a-bccc-7ec5f642c9fa)
+
 
 ![gameplay](https://github.com/Trickshotblaster/epic-python-game/assets/107130695/7725624d-e04b-4ed5-aae4-55e505f622d1)
 
