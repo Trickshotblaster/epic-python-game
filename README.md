@@ -14,7 +14,7 @@ Clone the repository in the ide of your choice (tested with pycharm, not sure ab
 **itch.io version:**
 Download and extract the zip file into your preferred folder. Make sure you have the correct libraries installed. To use the .exe version, navigate to the dist folder and open game.exe. The python file is in the main folder as game.py, and should work the same as the exe.
 
-Feel free to contribute any changes you want to make!
+Feel free to contribute any changes you want to make! If you want your changes to appear in the .exe file, you need to run `cd pygameGame` or wherever the pygameGame folder is located. Then make sure you have PyInstaller installed and run `python -m PyInstaller --onefile game.py` to compile the program into an exe in the dist folder.
 
 Video:
 
