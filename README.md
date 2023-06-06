@@ -15,3 +15,8 @@ Clone the repository in the ide of your choice (tested with pycharm, not sure ab
 Download and extract the zip file into your preferred folder. Make sure you have the correct libraries installed. To use the .exe version, navigate to the dist folder and open game.exe. The python file is in the main folder as game.py, and should work the same as the exe.
 
 Feel free to contribute any changes you want to make!
+
+Video:
+
+https://github.com/Trickshotblaster/epic-python-game/assets/107130695/f45c7c95-25bb-4ab3-83a7-1e05cab3118d
+
