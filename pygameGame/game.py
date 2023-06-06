@@ -226,9 +226,9 @@ class Player(pygame.sprite.Sprite):
 
 # Set up the display
 screen_width, screen_height = 640, 480
-screen = pygame.display.set_mode((screen_width, screen_height))
+screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("Epic Python Game")
-
+screen_img = pygame.Surface((screen_width, screen_height))
 # Load sprite image and obstacle map
 image_name = get_image_path("character.png")
 sprite_image = pygame.image.load(image_name)
@@ -295,18 +295,19 @@ while running:
     player.update_char(move_left, move_right, is_jumping)
     level = levels[player.level_index]
     # Render the screen
-    screen.fill((255, 255, 255))
-    screen.blit(level.image, (0, 0))
-    screen.blit(player.image, (player.rect.x, player.rect.y))
+    screen_img.fill((255, 255, 255))
+    screen_img.blit(level.image, (0, 0))
+    screen_img.blit(player.image, (player.rect.x, player.rect.y))
     for enemy in level.enemies:
         enemy.update()
-        screen.blit(enemy.image, (enemy.rect.x, enemy.rect.y))
+        screen_img.blit(enemy.image, (enemy.rect.x, enemy.rect.y))
     for powerup in level.powerups:
         powerup.update()
-        screen.blit(powerup.image, (powerup.rect.x, powerup.rect.y))
+        screen_img.blit(powerup.image, (powerup.rect.x, powerup.rect.y))
     coins_font = pygame.font.SysFont("system-ui", 24)
     cons_surface = coins_font.render("Coins: " + str(player.coins), False, (0, 0, 0))
-    screen.blit(cons_surface, (10, 10))
+    screen_img.blit(cons_surface, (10, 10))
+    screen.blit(pygame.transform.scale(screen_img, (screen.get_width(), screen.get_height())), (0,0))
     pygame.display.flip()
     is_jumping = False
 # Quit the game
