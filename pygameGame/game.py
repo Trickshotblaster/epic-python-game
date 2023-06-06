@@ -8,7 +8,10 @@ def get_application_path():
         return os.path.dirname(os.path.dirname(sys.executable))
     else:
         return os.path.dirname(os.path.abspath(__file__))
-
+def get_image_path(name):
+    return os.path.join(get_application_path(), "images", name)
+def scale_to_screen(image):
+    return pygame.transform.scale(image, (screen_width, screen_height))
 # Initialize Pygame
 pygame.init()
 
@@ -30,8 +33,17 @@ class Level():
                     abs(powerup.rect.y - y)) <= powerup.image.get_height() / 2:
                             is_colliding = True
                     if not is_colliding:
-                        image_name = os.path.join(get_application_path(), "images", "coin.png")
+                        image_name = get_image_path("coin.png")
                         self.powerups.append(Powerup([image_name], "coin", x, y))
+                elif self.powerup_map.get_at((x, y)) == (0, 0, 255):
+                    is_colliding = False
+                    for powerup in self.powerups:
+                        if (abs(powerup.rect.x - x)) <= player.image.get_width() / 2 and (
+                                abs(powerup.rect.y - y)) <= powerup.image.get_height() / 2:
+                            is_colliding = True
+                    if not is_colliding:
+                        image_name = get_image_path("portal.png")
+                        self.powerups.append(Powerup([image_name], "portal", x, y))
 
 
 class Powerup(pygame.sprite.Sprite):
@@ -113,7 +125,7 @@ class Enemy(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        image_name = os.path.join(get_application_path(), "images", "character.png")
+        image_name = get_image_path("character.png")
         self.images = [pygame.image.load(image_name)]
         self.image = self.images[0]
         self.rect = self.image.get_rect()
@@ -125,6 +137,7 @@ class Player(pygame.sprite.Sprite):
         self.vel_y = 0
         self.jump_speed = vertical_velocity
         self.coins = 0
+        self.level_index = 0
 
     def check_collision(self, direction):
         # true: horizontal, false: vertical
@@ -177,6 +190,9 @@ class Player(pygame.sprite.Sprite):
                 if not has_collected:
                     self.coins += 1
                     has_collected = True
+            elif collision.type == "portal":
+                self.level_index += 1
+                has_collected = True
         # Jumping logic
         if jump:
             if self.jump_count <= max_jumps:
@@ -214,23 +230,24 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Epic Python Game")
 
 # Load sprite image and obstacle map
-image_name = os.path.join(get_application_path(), "images", "character.png")
+image_name = get_image_path("character.png")
 sprite_image = pygame.image.load(image_name)
 sprite_image = pygame.transform.scale(sprite_image, (32, 32))
-image_name = os.path.join(get_application_path(), "images", "obstacle_map.png")
+image_name = get_image_path("obstacle_map.png")
 obstacle_map = pygame.image.load(image_name)
-image_name = os.path.join(get_application_path(), "images", "map_img.png")
+image_name = get_image_path("map_img.png")
 map_img = pygame.image.load(image_name)
-
+def downscale_image(image_name, size):
+    return pygame.transform.scale(pygame.image.load(image_name), size)
 # Get sprite and obstacle map dimensions
 sprite_width, sprite_height = sprite_image.get_size()
 obstacle_width, obstacle_height = obstacle_map.get_size()
-image_name = os.path.join(get_application_path(), "images", "obstacle_map.png")
-downscaled_map = pygame.transform.scale(pygame.image.load(image_name), (32, 24))
+image_name = get_image_path("obstacle_map.png")
+downscaled_map = downscale_image(image_name, (32, 24))
 # Scale the obstacle map to match the screen size
 obstacle_map = pygame.transform.scale(obstacle_map, (screen_width, screen_height))
 map_img = pygame.transform.scale(map_img, (screen_width, screen_height))
-image_name = os.path.join(get_application_path(), "images", "powerup_map.png")
+image_name = get_image_path("powerup_map.png")
 powerup_map = pygame.transform.scale(pygame.image.load(image_name), (screen_width, screen_height))
 # Set up initial sprite position
 sprite_x = screen_width // 2 - sprite_width // 2
@@ -249,10 +266,11 @@ max_jumps = 2
 # Game loop
 running = True
 player = Player(sprite_x, sprite_y)
-image_name = os.path.join(get_application_path(), "images", "enemy.png")
+image_name = get_image_path("enemy.png")
 enemies = [[200, 200, [image_name]], [250, 250, [image_name]]]
 level = Level(image=map_img, collision=downscaled_map, enemy_list=enemies, powerup_map=powerup_map)
-
+level2 = Level(image=scale_to_screen(pygame.image.load(get_image_path("map_img2.png"))), collision=downscale_image(get_image_path("obstacle_map2.png"), (32, 24)), enemy_list=[], powerup_map=scale_to_screen(pygame.image.load(get_image_path("powerup_map2.png"))))
+levels = [level, level2]
 while running:
     pass
     # Handle events
@@ -275,7 +293,7 @@ while running:
                 move_right = False
 
     player.update_char(move_left, move_right, is_jumping)
-
+    level = levels[player.level_index]
     # Render the screen
     screen.fill((255, 255, 255))
     screen.blit(level.image, (0, 0))
